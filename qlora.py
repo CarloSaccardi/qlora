@@ -78,7 +78,7 @@ DEFAULT_PAD_TOKEN = "[PAD]"
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(
-        default="EleutherAI/pythia-12b"
+        default="meta-llama/Meta-Llama-3-8B"#"Qwen/Qwen2-7B"#"EleutherAI/pythia-12b"
     )
     trust_remote_code: Optional[bool] = field(
         default=False,
@@ -295,12 +295,11 @@ def get_accelerate_model(args, checkpoint_dir):
         
     max_memory = f'{args.max_memory_MB}MB'
     max_memory = {i: max_memory for i in range(n_gpus)}
-    device_map = "auto"
-
+    device_map = "auto" #if finetuning Qwen then do {'':torch.cuda.current_device()} instead of "auto"
     # if we are in a distributed setting, we need to set the device map and max memory per device
     if os.environ.get('LOCAL_RANK') is not None:
-        local_rank = int(os.environ.get('LOCAL_RANK', '0'))
-        device_map = {'': local_rank}
+        local_rank = int(os.environ.get('LOCAL_RANK', '0')) 
+        device_map = {'': local_rank} 
         max_memory = {'': max_memory[local_rank]}
 
 
@@ -344,21 +343,30 @@ def get_accelerate_model(args, checkpoint_dir):
     model.config.torch_dtype=(torch.float32 if args.fp16 else (torch.bfloat16 if args.bf16 else torch.float32))
 
     # Tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model_name_or_path,
-        cache_dir=args.cache_dir,
-        padding_side="right",
-        use_fast=False, # Fast tokenizer giving issues.
-        tokenizer_type='llama' if 'llama' in args.model_name_or_path else None, # Needed for HF name change
-        trust_remote_code=args.trust_remote_code,
-        use_auth_token=args.use_auth_token,
-    )
+    if "Llama-3" in args.model_name_or_path:
+        tokenizer = AutoTokenizer.from_pretrained(
+                args.model_name_or_path,
+                tokenizer_type='llama' if 'llama' in args.model_name_or_path else None, # Needed for HF name change
+                trust_remote_code=args.trust_remote_code,
+                use_auth_token=args.use_auth_token,
+            )
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.model_name_or_path,
+            cache_dir=args.cache_dir,
+            padding_side="right",
+            use_fast=False, # Fast tokenizer giving issues.
+            tokenizer_type='llama' if 'llama' in args.model_name_or_path else None, # Needed for HF name change
+            trust_remote_code=args.trust_remote_code,
+            use_auth_token=args.use_auth_token,
+        )
     if tokenizer._pad_token is None:
         smart_tokenizer_and_embedding_resize(
             special_tokens_dict=dict(pad_token=DEFAULT_PAD_TOKEN),
             tokenizer=tokenizer,
             model=model,
         )
+    """
     if 'llama' in args.model_name_or_path or isinstance(tokenizer, LlamaTokenizer):
         # LLaMA tokenizer may not have correct special tokens set.
         # Check and add them if missing to prevent them from being parsed into different tokens.
@@ -372,7 +380,7 @@ def get_accelerate_model(args, checkpoint_dir):
                     model.config.pad_token_id if model.config.pad_token_id != -1 else tokenizer.pad_token_id
                 ),
         })
-    
+    """
     if not args.full_finetune:
         model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=args.gradient_checkpointing)
 

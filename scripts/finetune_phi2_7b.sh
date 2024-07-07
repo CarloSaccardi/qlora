@@ -1,7 +1,7 @@
 python qlora.py \
     --model_name_or_path microsoft/phi-2 \
     --use_auth \
-    --output_dir ./output/llama-2-guanaco-7b \
+    --output_dir ./output/phi-2 \
     --logging_steps 10 \
     --save_strategy steps \
     --data_seed 42 \

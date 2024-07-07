@@ -1,7 +1,7 @@
 python qlora.py \
     --model_name_or_path meta-llama/Meta-Llama-3-8B \
     --use_auth \
-    --output_dir ./output/llama-2-guanaco-7b \
+    --output_dir ./output/llama3 \
     --logging_steps 10 \
     --save_strategy steps \
     --data_seed 42 \
