@@ -37,6 +37,7 @@ import evaluate
 from peft import (
     prepare_model_for_kbit_training,
     LoraConfig,
+    AdaLoraConfig,
     get_peft_model,
     PeftModel
 )
@@ -401,13 +402,14 @@ def get_accelerate_model(args, checkpoint_dir):
         else:
             print(f'adding LoRA modules...')
             modules = find_all_linear_names(args, model)
-            config = LoraConfig(
-                r=args.lora_r,
-                lora_alpha=args.lora_alpha,
+
+            config = AdaLoraConfig(
+                peft_type="ADALORA", 
+                task_type="CAUSAL_LM", 
+                r=args.lora_r, 
+                lora_alpha=args.lora_alpha, 
                 target_modules=modules,
                 lora_dropout=args.lora_dropout,
-                bias="none",
-                task_type="CAUSAL_LM",
             )
             model = get_peft_model(model, config)
 

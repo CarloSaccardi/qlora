@@ -1,4 +1,4 @@
-python qlora.py \
+python adalora.py \
     --model_name_or_path meta-llama/Meta-Llama-3-8B \
     --use_auth \
     --output_dir ./output/llama3 \
@@ -24,7 +24,6 @@ python qlora.py \
     --lora_modules all \
     --double_quant \
     --quant_type nf4 \
-    --bf16 \
     --bits 4 \
     --warmup_ratio 0.03 \
     --lr_scheduler_type constant \

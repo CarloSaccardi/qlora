@@ -1,4 +1,4 @@
-python qlora.py \
+python adalora.py \
     --model_name_or_path microsoft/phi-2 \
     --use_auth \
     --output_dir ./output/phi-2 \
